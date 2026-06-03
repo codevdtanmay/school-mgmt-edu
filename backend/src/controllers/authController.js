@@ -144,4 +144,13 @@ const getme = async(req, res) => {
     })
 }
 
-export default {register, login, getme}
+const logout = async(req, res) => {
+    res.clearCookie("token")
+
+    res.status(200).json({
+        success: true,
+        message: "Logged Out Successfully"
+    })
+}
+
+export default {register, login, getme, logout}
