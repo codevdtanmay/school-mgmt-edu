@@ -59,6 +59,91 @@ const getStudents = async(req, res) => {
     })
 }}
 
+const getStudentbyId = async(req, res) => {
+    try {
+        const {id} = req.params;
+
+        const student = await studentModel.findById(id).populate("userId", "name email");
+
+        if(!student){
+            return res.status(404).json({
+                success: false,
+                message: "Student not Found"
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            student
+        })
+    } catch (error) {
+        console.error(error)
+        return res.status(500).json({
+            success: false,
+            message: "Error finding by Id"
+        })
+    }
+}
+
+const updatebyId = async(req, res) => {
+
+    try {
+console.log("BODY:", req.body);
+      const {id} = req.params
+
+      const {
+        name, email, class: studentClass, section, rollNo, fatherName,motherName, phone
+         } = req.body
+
+    const student = await studentModel.findById(id)
+
+    if(!student){
+        return res.status(404).json({
+            success: false,
+            message: "Student not found"
+        })
+    }
+
+    await userModel.findByIdAndUpdate(student.userId, {name , email})
+
+    await studentModel.findByIdAndUpdate(id, {class: studentClass, section, rollNo, fatherName,motherName, phone})
+
+    return res.status(200).json({
+        success: true,
+        message: "Student Updated Successfully"
+    })
 
 
-export default {addStudent, getStudents}
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        })
+    }
+}
+
+const deletebyId = async(req, res) => {
+    try {
+        const {id} = req.params;
+
+        const student = await studentModel.findById(id);
+
+        await studentModel.findByIdAndDelete(id)
+
+        await userModel.findByIdAndDelete(student.userId)
+
+        return res.status(200).json({
+            success: true,
+            message: "Student Deleted Successfully"
+        })
+        
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        })
+    }
+}
+export default {addStudent, getStudents, getStudentbyId, updatebyId, deletebyId}

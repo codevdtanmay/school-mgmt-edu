@@ -8,5 +8,8 @@ const router = express.Router()
 
 router.post("/add", authMiddleware, authorize("admin"), studentController.addStudent)
 router.get("/", authMiddleware, authorize("admin", "teacher"), studentController.getStudents)
+router.get("/:id", authMiddleware, authorize("admin", "teacher"), studentController.getStudentbyId);
+router.patch("/:id", authMiddleware, authorize("admin" ), studentController.updatebyId)
+router.delete("/:id", authMiddleware, authorize("admin" ), studentController.deletebyId)
 
 export default router
