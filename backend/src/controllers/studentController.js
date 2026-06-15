@@ -1,13 +1,15 @@
 import studentModel from "../models/student.model.js"
 import userModel from "../models/userSchema.model.js"
 import bcrypt from "bcryptjs"
-
+import studentFeeModel from "../models/studentFee.model.js";
 const addStudent = async(req,res) => {
     try {
           const {
             name,email,password,admissionNo,class: studentClass,
             section, rollNo, fatherName, motherName, phone
           } = req.body
+           
+        
 
           const isUserAlreadyExist = await userModel.findOne({email})
           if(isUserAlreadyExist){
@@ -27,6 +29,14 @@ const addStudent = async(req,res) => {
              userId: user._id, admissionNo, class : studentClass, section, rollNo,
               fatherName, motherName, phone
           })
+            await studentFeeModel.create({
+              studentId: student._id,
+              totalFee: 2800,
+              paidAmount: 0, 
+              dueAmount: 2800,
+              status: "Pending"
+            });
+           
 
           return res.status(201).json({
             success: true,
