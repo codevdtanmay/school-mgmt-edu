@@ -39,7 +39,7 @@ const addStudent = async(req,res) => {
 
         return res.status(500).json({
             success : false,
-            message: "Internet Server Error"
+            message: "Internal Server Error"
         })
     }
 }
@@ -57,7 +57,8 @@ const getStudents = async(req, res) => {
       success: false,
       message: "Internal Server Error"
     })
-}}
+    }
+}
 
 const getStudentbyId = async(req, res) => {
     try {
