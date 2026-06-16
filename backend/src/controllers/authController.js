@@ -52,8 +52,8 @@ const register = async(req,res) => {
     success: false,
     message: "Internal Server Error"
   });
-}
    }
+}
 
 const login = async(req,res) => {
     try {
@@ -97,21 +97,18 @@ const login = async(req,res) => {
      res.cookie("token", token, {
         httpOnly : true
      })
-     
 
     res.status(200).json({
-    success: true,
-     message: "Login successful",
-    user: {
-    id: user._id,
-    name: user.name,
-    email: user.email,
-    role: user.role
-  }
-});
-    }
-
-catch (error) {
+      success: true,
+      message: "Login successful",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+    } catch (error) {
     console.error("Login User Issue:", error);
 
     if (error.name === "ValidationError") {
@@ -125,7 +122,7 @@ catch (error) {
         success: false,
         message: "Internal Server Error"
     });
-}
+    }
 }
   
 const getme = async(req, res) => {
