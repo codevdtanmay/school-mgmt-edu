@@ -1,44 +1,92 @@
-
 import mongoose from "mongoose";
 
-const feeStructureSchema = new mongoose.Schema({
-  className: {
-    type: String,
-    required: true
-  },
+const feeStructureSchema = new mongoose.Schema(
+  {
+    class: {
+      type: String,
+      required: true,
+      trim: true
+    },
 
-  tuitionFee: {
-    type: Number,
-    default: 0
-  },
+    academicSession: {
+      type: String,
+      required: true
+    },
 
-  admissionFee: {
-    type: Number,
-    default: 0
-  },
+    admissionFee: {
+      type: Number,
+      default: 0
+    },
 
-  examFee: {
-    type: Number,
-    default: 0
-  },
+    tuitionFee: {
+      type: Number,
+      default: 0
+    },
 
-  transportFee: {
-    type: Number,
-    default: 0
-  },
+    computerFee: {
+      type: Number,
+      default: 0
+    },
 
-  otherFee: {
-    type: Number,
-    default: 0
-  },
+    examFee: {
+      type: Number,
+      default: 0
+    },
 
-  totalFee: {
-    type: Number,
-    required: true
+    culturalActivityFee: {
+      type: Number,
+      default: 0
+    },
+
+    totalFee: {
+      type: Number,
+      default: 0
+    },
+
+    // Installments
+
+    juneAmount: {
+      type: Number,
+      default: 0
+    },
+
+    septemberAmount: {
+      type: Number,
+      default: 0
+    },
+
+    decemberAmount: {
+      type: Number,
+      default: 0
+    },
+
+    marchAmount: {
+      type: Number,
+      default: 0
+    },
+    isDeleted: {
+  type: Boolean,
+  default: false
+},
+
+deletedAt: {
+  type: Date,
+  default: null
+}
+  },
+  {
+    timestamps: true
   }
+);
+feeStructureSchema.pre("save", function () {
 
-}, { timestamps: true });
-
+  this.totalFee =
+    this.admissionFee +
+    this.tuitionFee +
+    this.computerFee +
+    this.examFee +
+    this.culturalActivityFee;
+});
 export default mongoose.model(
   "FeeStructure",
   feeStructureSchema

@@ -67,7 +67,7 @@ const getAllTeachers = async (req, res) => {
   try {
 
     const teachers = await teacherModel
-      .find()
+      .find({isDeleted: false})
       .populate("userId", "name email");
 
     return res.status(200).json({
@@ -190,10 +190,16 @@ const deleteTeacher = async (req, res) => {
       });
     }
 
-    await teacherModel.findByIdAndDelete(id);
+    await teacherModel.findByIdAndUpdate(id, {
+      isDeleted: true,
+      deletedAt: new Date()
+});
 
     await userModel.findByIdAndDelete(
-      teacher.userId
+      teacher.userId, {
+      isDeleted: true,
+      deletedAt: new Date()
+}
     );
 
     return res.status(200).json({

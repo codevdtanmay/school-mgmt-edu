@@ -32,7 +32,53 @@ const studentSchema = new mongoose.Schema(
        },
         phone: {
          type: String
-    }
+    },
+
+isDeleted: {
+  type: Boolean,
+  default: false
+},
+
+deletedAt: {
+  type: Date,
+  default: null
+},
+
+
+    feeStructureId: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "FeeStructure"
+},
+
+totalFee: {
+  type: Number,
+  default: 0
+},
+
+paidAmount: {
+  type: Number,
+  default: 0
+},
+
+dueAmount: {
+  type: Number,
+  default: 0
+},
+
+status: {
+  type: String,
+  enum: ["Paid", "Partial", "Unpaid"],
+  default: "Unpaid"
+},
+
+paymentHistory: [
+  {
+    receiptNo: String,
+    amount: Number,
+    date: String,
+    paymentMethod: String
+  }
+]
   },
   {
     timestamps: true
