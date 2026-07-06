@@ -1,6 +1,7 @@
 import studentModel from "../models/student.model.js";
 import feeStructureModel from "../models/feeStructure.js";
 import computeInstallmentDetails from "../utils/installmentCalculator.js";
+import feeHistoryModel from "../models/feeHistory.model.js";
 
 const collectFee = async (req, res) => {
   try {
@@ -11,10 +12,10 @@ const collectFee = async (req, res) => {
       paymentMethod
     } = req.body;
 
-    if (!studentId || !amountPaid) {
+    if (!studentId || Number(amountPaid) <= 0) {
       return res.status(400).json({
         success: false,
-        message: "Student ID and Amount are required"
+        message: "Valid student ID and payment amount are required"
       });
     }
 
@@ -38,19 +39,8 @@ const collectFee = async (req, res) => {
     const receiptNo =
       `REC-${Date.now()}`;
 
-    const paymentRecord = {
-      receiptNo,
-      amount: amountPaid,
-      date: new Date()
-        .toISOString()
-        .split("T")[0],
-      paymentMethod:
-        paymentMethod || "Cash"
-    };
-
     student.paidAmount += Number(amountPaid);
-
-    student.dueAmount =
+        student.dueAmount =
       student.totalFee -
       student.paidAmount;
 
@@ -69,24 +59,39 @@ const collectFee = async (req, res) => {
 
     } else {
 
-      student.status = "Unpaid";
+      student.status = "Pending";
 
     }
 
-    student.paymentHistory.push(
-      paymentRecord
-    );
+  
+  
+    await feeHistoryModel.create({
+
+  studentId: student._id,
+
+  receiptNo,
+
+  amount: Number(amountPaid),
+
+  paymentMethod: paymentMethod || "Cash",
+
+  paymentDate: new Date()
+
+});
+
+
+
+
+  
 
     await student.save();
 
-    return res.status(200).json({
-      success: true,
-      message:
-        "Fee Collected Successfully",
-      receipt: paymentRecord,
-      student
-    });
-
+   return res.status(200).json({
+    success: true,
+    message: "Fee Collected Successfully",
+    receiptNo,
+    student
+});
   } catch (error) {
 
     console.log(error);
@@ -123,6 +128,17 @@ const getStudentFeeDetails = async (
       await feeStructureModel.findById(
         student.feeStructureId
       );
+      if (!structure) {
+
+  return res.status(404).json({
+
+    success: false,
+
+    message: "Fee structure not found"
+
+  });
+
+}
 
     const installments =
       computeInstallmentDetails(
@@ -155,44 +171,51 @@ const getStudentFeeDetails = async (
 };
 
 const getPaymentHistory = async (req, res) => {
-  try {
+    try {
 
-    const { id } = req.params;
+        const { id } = req.params;
 
-    const student = await studentModel
-      .findById(id)
-      .populate("userId", "name");
+        const history = await feeHistoryModel
+            .find({ studentId: id })
+            .sort({ paymentDate: -1 });
 
-    if (!student) {
-      return res.status(404).json({
-        success: false,
-        message: "Student not found"
-      });
+        const student = await studentModel
+            .findById(id)
+            .populate("userId", "name");
+
+        if (!student) {
+            return res.status(404).json({
+                success: false,
+                message: "Student not found"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            studentName: student.userId.name,
+            admissionNo: student.admissionNo,
+            history
+        });
+
+    } catch (error) {
+
+        console.log(error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        });
+
     }
-
-    return res.status(200).json({
-      success: true,
-      studentName: student.userId.name,
-      admissionNo: student.admissionNo,
-      paymentHistory: student.paymentHistory
-    });
-
-  } catch (error) {
-
-    console.log(error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Internal Server Error"
-    });
-
-  }
 };
+
 
 const getFeeDashboard = async (req, res) => {
   try {
 
-    const students = await studentModel.find();
+    const students = await studentModel.find({
+  isDeleted: false
+});
 
     const totalStudents = students.length;
 
@@ -234,7 +257,178 @@ const getFeeDashboard = async (req, res) => {
 
   }
 };
+const getAllFees = async (req, res) => {
+  try {
 
+    const {
+      status,
+      class: studentClass,
+      section,
+      search,
+      page = 1,
+      limit = 20
+    } = req.query;
+
+    const filter = {
+      isDeleted: false
+    };
+
+    if (status) {
+      filter.status = status;
+    }
+
+    if (studentClass) {
+      filter.class = studentClass;
+    }
+
+    if (section) {
+      filter.section = section;
+    }
+
+    const skip = (Number(page) - 1) * Number(limit);
+
+    let students = await studentModel
+      .find(filter)
+      .populate("userId", "name email")
+      .sort({ class: 1, section: 1, rollNo: 1 })
+      .skip(skip)
+      .limit(Number(limit));
+
+    if (search) {
+
+      const keyword = search.toLowerCase();
+
+      students = students.filter(student =>
+        student.userId?.name
+          ?.toLowerCase()
+          .includes(keyword)
+
+        ||
+
+        student.admissionNo
+          ?.toLowerCase()
+          .includes(keyword)
+      );
+    }
+
+    const totalStudents =
+      await studentModel.countDocuments(filter);
+
+    const formattedData = students.map(student => ({
+      studentId: student._id,
+
+      name: student.userId?.name,
+
+      email: student.userId?.email,
+
+      admissionNo: student.admissionNo,
+
+      class: student.class,
+
+      section: student.section,
+
+      rollNo: student.rollNo,
+
+      totalFee: student.totalFee,
+
+      paidAmount: student.paidAmount,
+
+      dueAmount: student.dueAmount,
+
+      status: student.status
+    }));
+
+    return res.status(200).json({
+      success: true,
+
+      students: formattedData,
+
+      pagination: {
+        currentPage: Number(page),
+
+        totalPages: Math.ceil(
+          totalStudents / Number(limit)
+        ),
+
+        totalStudents,
+
+        limit: Number(limit)
+      }
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
+
+  }
+};
+const getMonthlyFeeReport = async (req, res) => {
+  try {
+
+    const { month, year } = req.query;
+
+    if (!month || !year) {
+      return res.status(400).json({
+        success: false,
+        message: "Month and Year are required"
+      });
+    }
+
+    const startDate = new Date(Number(year), Number(month) - 1, 1);
+
+    const endDate = new Date(Number(year), Number(month), 1);
+
+    const payments = await feeHistoryModel
+      .find({
+        paymentDate: {
+          $gte: startDate,
+          $lt: endDate
+        }
+      })
+      .populate({
+        path: "studentId",
+        populate: {
+          path: "userId",
+          select: "name email"
+        }
+      })
+      .sort({ paymentDate: -1 });
+
+    const totalCollection = payments.reduce(
+      (sum, payment) => sum + payment.amount,
+      0
+    );
+
+    return res.status(200).json({
+      success: true,
+
+      month,
+
+      year,
+
+      totalCollection,
+
+      totalTransactions: payments.length,
+
+      payments
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
+
+  }
+};
 export default {
-  collectFee,getStudentFeeDetails,getPaymentHistory,getFeeDashboard
+  collectFee,getStudentFeeDetails,getPaymentHistory,getFeeDashboard,getAllFees,getMonthlyFeeReport
 };

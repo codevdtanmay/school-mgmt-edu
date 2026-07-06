@@ -145,14 +145,7 @@ const studentSchema = new mongoose.Schema(
       default: "Pending"
     },
 
-    paymentHistory: [
-      {
-        receiptNo: String,
-        amount: Number,
-        date: String,
-        paymentMethod: String
-      }
-    ],
+    
 
     isDeleted: {
       type: Boolean,
