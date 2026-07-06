@@ -1,362 +1,475 @@
-import studentModel from "../models/student.model.js"
-import userModel from "../models/userSchema.model.js"
-import bcrypt from "bcryptjs"
+import studentModel from "../models/student.model.js";
+import userModel from "../models/userSchema.model.js";
+import feeStructureModel from "../models/feeStructure.js";
+import bcrypt from "bcryptjs";
 
-const addStudent = async(req,res) => {
-    try {
-         const {
-    name,
-    email,
-    password,
 
-    admissionNo,
-    class: studentClass,
-    section,
-    rollNo,
+// =========================
+// ADD STUDENT
+// =========================
 
-    fatherName,
-    motherName,
-    phone,
+const addStudent = async (req, res) => {
+  try {
+    const {
+      name,
+      email,
+      password,
 
-    gender,
-    dateOfBirth,
-    joiningDate,
+      admissionNo,
+      class: studentClass,
+      section,
+      rollNo,
 
-    category,
+      fatherName,
+      motherName,
+      phone,
 
-    aadharNo,
-    samagraId,
-    apaarId,
-    panNo,
-    usesTransport,
-    address
-} = req.body;
+      gender,
+      dateOfBirth,
+      joiningDate,
 
-          const isUserAlreadyExist = await userModel.findOne({email})
-          if(isUserAlreadyExist){
-            return res.status(409).json({
-                success: false,
-                message: "User Already Exist"
-            })
-          }
+      category,
 
-          const hashedPassword = await bcrypt.hash(password, 10)
+      aadharNo,
+      samagraId,
+      apaarId,
+      panNo,
 
-          if (aadharNo && !/^\d{12}$/.test(aadharNo)) {
-    return res.status(400).json({
+      usesTransport,
+
+      address
+    } = req.body;
+
+    // Email Exists
+    const userExists = await userModel.findOne({ email });
+
+    if (userExists) {
+      return res.status(409).json({
         success: false,
-        message: "Aadhaar number must be exactly 12 digits"
-    });
-}
+        message: "User already exists"
+      });
+    }
 
-if (phone && !/^\d{10}$/.test(phone)) {
-    return res.status(400).json({
+    // Aadhaar Validation
+    if (aadharNo && !/^\d{12}$/.test(aadharNo)) {
+      return res.status(400).json({
         success: false,
-        message: "Phone number must be exactly 10 digits"
-    });
-}
+        message: "Aadhaar number must be 12 digits"
+      });
+    }
 
-if (panNo && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panNo)) {
-    return res.status(400).json({
+    // Phone Validation
+    if (phone && !/^\d{10}$/.test(phone)) {
+      return res.status(400).json({
+        success: false,
+        message: "Phone number must be 10 digits"
+      });
+    }
+
+    // PAN Validation
+    if (panNo && !/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(panNo)) {
+      return res.status(400).json({
         success: false,
         message: "Invalid PAN number"
-    });
-}
+      });
+    }
 
-if (address?.pincode && !/^\d{6}$/.test(address.pincode)) {
-    return res.status(400).json({
+    // Pincode Validation
+    if (address?.pincode && !/^\d{6}$/.test(address.pincode)) {
+      return res.status(400).json({
         success: false,
-        message: "Pincode must be exactly 6 digits"
+        message: "Invalid Pincode"
+      });
+    }
+
+    // Unique Checks
+
+    if (aadharNo) {
+      const exists = await studentModel.findOne({ aadharNo });
+
+      if (exists) {
+        return res.status(409).json({
+          success: false,
+          message: "Aadhaar already exists"
+        });
+      }
+    }
+
+    if (samagraId) {
+      const exists = await studentModel.findOne({ samagraId });
+
+      if (exists) {
+        return res.status(409).json({
+          success: false,
+          message: "Samagra ID already exists"
+        });
+      }
+    }
+
+    if (apaarId) {
+      const exists = await studentModel.findOne({ apaarId });
+
+      if (exists) {
+        return res.status(409).json({
+          success: false,
+          message: "APAAR ID already exists"
+        });
+      }
+    }
+
+    // Fee Structure
+
+    const feeStructure = await feeStructureModel.findOne({
+      class: studentClass
     });
-}
 
-if (aadharNo) {
-
-    const existing = await studentModel.findOne({ aadharNo });
-
-    if (existing) {
-        return res.status(409).json({
-            success: false,
-            message: "Aadhaar number already exists"
-        });
+    if (!feeStructure) {
+      return res.status(404).json({
+        success: false,
+        message: "Fee Structure not found"
+      });
     }
-}
 
-if (samagraId) {
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const existing = await studentModel.findOne({ samagraId });
+    const user = await userModel.create({
+      name,
+      email,
+      password: hashedPassword,
+      role: "student"
+    });
 
-    if (existing) {
-        return res.status(409).json({
-            success: false,
-            message: "Samagra ID already exists"
-        });
-    }
-}
+    const student = await studentModel.create({
+      userId: user._id,
 
-if (apaarId) {
+      admissionNo,
 
-    const existing = await studentModel.findOne({ apaarId });
+      class: studentClass,
+      section,
+      rollNo,
 
-    if (existing) {
-        return res.status(409).json({
-            success: false,
-            message: "APAAR ID already exists"
-        });
-    }
-}
+      fatherName,
+      motherName,
+      phone,
 
-          const user = await userModel.create({
-            name, email, password: hashedPassword, role: "student"
-          })
+      gender,
+      dateOfBirth,
+      joiningDate,
 
-        const student = await studentModel.create({
-    userId: user._id,
+      category,
 
-    admissionNo,
-    class: studentClass,
-    section,
-    rollNo,
+      aadharNo,
+      samagraId,
+      apaarId,
+      panNo,
 
-    fatherName,
-    motherName,
-    phone,
+      usesTransport,
+      address,
 
-    gender,
-    dateOfBirth,
-    joiningDate,
+      feeStructureId: feeStructure._id,
+      totalFee: feeStructure.totalFee,
+      dueAmount: feeStructure.totalFee
+    });
 
-    category,
+    return res.status(201).json({
+      success: true,
+      message: "Student Added Successfully",
+      student
+    });
 
-    aadharNo,
-    samagraId,
-    apaarId,
-    panNo,
+  } catch (error) {
+    console.error(error);
 
-    address,
-    usesTransport
-});
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
+  }
+};
 
-          return res.status(201).json({
-            success: true,
-            message: "Student Added Successfully",
-            student
-          })
-   
-    } catch (error) {
-        console.error(error)
 
-        return res.status(500).json({
-            success : false,
-            message: "Internet Server Error"
-        })
-    }
-}
+// =========================
+// GET STUDENTS
+// =========================
 
 const getStudents = async (req, res) => {
-    try {
 
-        const { class: studentClass, category, village, search } = req.query;
-        const page = Number(req.query.page) || 1;
-const limit = Number(req.query.limit) || 20;
-const totalStudents = await studentModel.countDocuments(filter);
-const skip = (page - 1) * limit;
+  try {
 
-        const filter = {};
+    const {
+      class: studentClass,
+      category,
+      village,
+      sortBy = "createdAt",
+      order = "desc"
+    } = req.query;
 
-        if (studentClass) {
-            filter.class = studentClass;
-        }
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 20;
 
-        if (category) {
-            filter.category = category;
-        }
+    const filter = {
+      isDeleted: false
+    };
 
-        if (village) {
-            filter["address.village"] = village;
-        }
+    if (studentClass)
+      filter.class = studentClass;
 
-        const students = await studentModel
-.find(filter)
-.populate("userId", "name email")
-.sort({ [sortBy]: order })
-.skip(skip)
-.limit(limit);
+    if (category)
+      filter.category = category;
 
-        // Search by Name / Admission No / Aadhaar
-        if (search) {
-            const q = search.toLowerCase();
+    if (village)
+      filter["address.village"] = village;
 
-            students = students.filter(student =>
-                student.userId?.name?.toLowerCase().includes(q) ||
-                student.admissionNo?.toLowerCase().includes(q) ||
-                student.aadharNo?.includes(q)
-            );
-        }
+    const totalStudents = await studentModel.countDocuments(filter);
 
-        return res.status(200).json({
-    success: true,
-    students,
+    const students = await studentModel.find(filter)
+      .populate("userId", "name email")
+      .sort({
+        [sortBy]: order === "asc" ? 1 : -1
+      })
+      .skip((page - 1) * limit)
+      .limit(limit);
 
-    pagination: {
+    return res.status(200).json({
+      success: true,
+
+      students,
+
+      pagination: {
         page,
         limit,
         totalStudents,
         totalPages: Math.ceil(totalStudents / limit)
-    }
-});
+      }
 
-    } catch (error) {
+    });
 
-        console.error(error);
+  } catch (error) {
 
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error"
-        });
-    }
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
+
+  }
+
 };
 
-const getStudentbyId = async(req, res) => {
-    try {
-        const {id} = req.params;
 
-        const student = await studentModel.findById(id).populate("userId", "name email");
+// =========================
+// GET STUDENT BY ID
+// =========================
 
-        if(!student){
-            return res.status(404).json({
-                success: false,
-                message: "Student not Found"
-            })
-        }
+const getStudentbyId = async (req, res) => {
 
-        return res.status(200).json({
-            success: true,
-            student
-        })
-    } catch (error) {
-        console.error(error)
-        return res.status(500).json({
-            success: false,
-            message: "Error finding by Id"
-        })
-    }
-}
+  try {
 
-const updatebyId = async(req, res) => {
-
-    try {
-console.log("BODY:", req.body);
-      const {id} = req.params
-
-      const {
-    name,
-    email,
-
-    class: studentClass,
-    section,
-    rollNo,
-
-    fatherName,
-    motherName,
-    phone,
-
-    gender,
-    dateOfBirth,
-    joiningDate,
-
-    category,
-
-    aadharNo,
-    samagraId,
-    apaarId,
-    panNo,
-
-    address,
-    usesTransport
-} = req.body;
+    const { id } = req.params;
 
     const student = await studentModel.findById(id)
+      .populate("userId", "name email");
 
-    if(!student){
-        return res.status(404).json({
-            success: false,
-            message: "Student not found"
-        })
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found"
+      });
     }
 
-    await userModel.findByIdAndUpdate(student.userId, {name , email})
+    return res.status(200).json({
+      success: true,
+      student
+    });
 
-  const updatedStudent = await studentModel.findByIdAndUpdate(
-    id,
-    {
+  } catch (error) {
+
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
+
+  }
+
+};
+
+
+// =========================
+// UPDATE
+// =========================
+
+const updatebyId = async (req, res) => {
+
+  try {
+
+    const { id } = req.params;
+
+    const {
+      name,
+      email,
+
+      class: studentClass,
+      section,
+      rollNo,
+
+      fatherName,
+      motherName,
+      phone,
+
+      gender,
+      dateOfBirth,
+      joiningDate,
+
+      category,
+
+      aadharNo,
+      samagraId,
+      apaarId,
+      panNo,
+
+      address,
+      usesTransport
+    } = req.body;
+
+    const student = await studentModel.findById(id);
+
+    if (!student) {
+
+      return res.status(404).json({
+        success: false,
+        message: "Student not found"
+      });
+
+    }
+
+    await userModel.findByIdAndUpdate(student.userId, {
+      name,
+      email
+    });
+
+    let feeStructure = null;
+
+    if (student.class !== studentClass) {
+
+      feeStructure = await feeStructureModel.findOne({
+        class: studentClass
+      });
+
+    }
+
+    await studentModel.findByIdAndUpdate(
+      id,
+      {
+
         class: studentClass,
         section,
         rollNo,
+
         fatherName,
         motherName,
         phone,
+
         gender,
         dateOfBirth,
         joiningDate,
+
         category,
+
         aadharNo,
         samagraId,
         apaarId,
         panNo,
+
         address,
-        usesTransport
-    },
-    { new: true }
-);
+        usesTransport,
+
+        ...(feeStructure && {
+          feeStructureId: feeStructure._id,
+          totalFee: feeStructure.totalFee,
+          dueAmount: feeStructure.totalFee
+        })
+
+      },
+      {
+        new: true
+      }
+    );
 
     return res.status(200).json({
-        success: true,
-        message: "Student Updated Successfully"
-    })
-
-
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error"
-        })
-    }
-}
-
-const deletebyId = async(req, res) => {
-    try {
-        const {id} = req.params;
-
-        const student = await studentModel.findById(id);
-        if (!student) {
-
-    return res.status(404).json({
-
-        success: false,
-
-        message: "Student not found"
-
+      success: true,
+      message: "Student Updated Successfully"
     });
 
-}
+  } catch (error) {
 
-        await studentModel.findByIdAndDelete(id)
+    console.error(error);
 
-        await userModel.findByIdAndDelete(student.userId)
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
 
-        return res.status(200).json({
-            success: true,
-            message: "Student Deleted Successfully"
-        })
-        
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error"
-        })
+  }
+
+};
+
+
+// =========================
+// DELETE (SOFT DELETE)
+// =========================
+
+const deletebyId = async (req, res) => {
+
+  try {
+
+    const { id } = req.params;
+
+    const student = await studentModel.findById(id);
+
+    if (!student) {
+
+      return res.status(404).json({
+        success: false,
+        message: "Student not found"
+      });
+
     }
-}
-export default {addStudent, getStudents, getStudentbyId, updatebyId, deletebyId}
+
+    await studentModel.findByIdAndUpdate(id, {
+      isDeleted: true,
+      deletedAt: new Date()
+    });
+
+    await userModel.findByIdAndUpdate(student.userId, {
+      isDeleted: true,
+      deletedAt: new Date()
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Student Deleted Successfully"
+    });
+
+  } catch (error) {
+
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
+
+  }
+
+};
+
+export default {
+  addStudent,
+  getStudents,
+  getStudentbyId,
+  updatebyId,
+  deletebyId
+};
