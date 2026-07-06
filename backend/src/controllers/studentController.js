@@ -11,6 +11,8 @@ const addStudent = async(req,res) => {
            
         
 
+
+
           const isUserAlreadyExist = await userModel.findOne({email})
           if(isUserAlreadyExist){
             return res.status(409).json({
@@ -21,13 +23,25 @@ const addStudent = async(req,res) => {
 
           const hashedPassword = await bcrypt.hash(password, 10)
 
+          const feeStructure =
+  await feeStructureModel.findOne({
+    class: studentClass
+  });
+  if (!feeStructure) {
+  return res.status(404).json({
+    success: false,
+    message: "Fee Structure not found"
+  });
+}
+
           const user = await userModel.create({
             name, email, password: hashedPassword, role: "student"
           })
 
           const student = await studentModel.create({
              userId: user._id, admissionNo, class : studentClass, section, rollNo,
-              fatherName, motherName, phone
+              fatherName, motherName, phone,  feeStructureId: feeStructure._id,totalFee: feeStructure.totalFee,
+  dueAmount: feeStructure.totalFee
           })
             await studentFeeModel.create({
               studentId: student._id,
@@ -49,14 +63,16 @@ const addStudent = async(req,res) => {
 
         return res.status(500).json({
             success : false,
-            message: "Internet Server Error"
+            message: "Internal Server Error"
         })
     }
 }
 
 const getStudents = async(req, res) => {
     try {
-        const students = await studentModel.find().populate("userId", "name email");
+        const students = await studentModel.find({
+  isDeleted: false
+}).populate("userId", "name email");
         return res.status(200).json({
             success: true,
             students
@@ -67,7 +83,8 @@ const getStudents = async(req, res) => {
       success: false,
       message: "Internal Server Error"
     })
-}}
+    }
+}
 
 const getStudentbyId = async(req, res) => {
     try {
@@ -139,9 +156,15 @@ const deletebyId = async(req, res) => {
 
         const student = await studentModel.findById(id);
 
-        await studentModel.findByIdAndDelete(id)
+        await studentModel.findByIdAndUpdate(id, {
+      isDeleted: true,
+      deletedAt: new Date()
+});
 
-        await userModel.findByIdAndDelete(student.userId)
+        await userModel.findByIdAndUpdate(student.userId,{
+      isDeleted: true,
+      deletedAt: new Date()
+} )
 
         return res.status(200).json({
             success: true,

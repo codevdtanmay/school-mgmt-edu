@@ -1,6 +1,7 @@
 import express from "express"
 import cors from "cors";
 import cookieParser from "cookie-parser"
+import cors from "cors"
 import authRoute from "./routes/authRoute.js"
 import testRoute from "./routes/testRoute.js"
 import studentRoute from "./routes/studentRoute.js"
@@ -9,6 +10,7 @@ import tcRoutes from "./routes/tc.route.js";
 
 
 const app = express();
+
 app.use(express.json())
 app.use(cookieParser())
 app.use(
