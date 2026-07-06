@@ -5,5 +5,6 @@ const router = express.Router();
 
 router.post("/collect", feeController.collectFee);
 router.get("/", feeController.getAllFees)
+router.get("/history", feeController.getFeeHistory);
 
 export default router;
