@@ -26,7 +26,12 @@ const register = async(req,res) => {
      id: user._id,
    }, process.env.JWT_SECRET);
 
-   res.cookie("token", token)
+  res.cookie("token", token, {
+  httpOnly: true,
+  sameSite: "lax",
+  secure: false, // localhost only
+  maxAge: 7 * 24 * 60 * 60 * 1000
+});
 
 
     res.status(201).json({
@@ -94,9 +99,12 @@ const login = async(req,res) => {
         expiresIn: '7d'
      })
      
-     res.cookie("token", token, {
-        httpOnly : true
-     })
+    res.cookie("token", token, {
+  httpOnly: true,
+  sameSite: "lax",
+  secure: false, // localhost only
+  maxAge: 7 * 24 * 60 * 60 * 1000
+});
 
     res.status(200).json({
       success: true,
