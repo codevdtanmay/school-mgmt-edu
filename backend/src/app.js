@@ -35,7 +35,7 @@ app.use("/api/test", testRoute);
 app.use("/api/student", studentRoute);
 
 // Transport
-app.use("/api/transports", transportRoutes);
+app.use("/api/transport", transportRoutes);
 
 // Teachers
 app.use("/api/teachers", teacherRoute);

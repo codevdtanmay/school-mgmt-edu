@@ -85,7 +85,7 @@ const getAllTransportStudents = async (req, res) => {
 
       monthlyCharge: transport.monthlyCharge,
 
-      joiningMonth: transport.joiningMonth,
+      joiningDate: transport.joiningDate,
 
       status: transport.status
     }));
@@ -159,12 +159,32 @@ const updateTransport = async (req, res) => {
       });
     }
 
-    await transportModel.findByIdAndUpdate(id, req.body);
+    const updated = await transportModel
+  .findByIdAndUpdate(id, req.body, { new: true })
+  .populate({
+    path: "studentId",
+    populate: {
+      path: "userId",
+      select: "name email"
+    }
+  });
 
-    return res.status(200).json({
-      success: true,
-      message: "Transport updated successfully"
-    });
+return res.status(200).json({
+  success: true,
+  transport: {
+    id: updated._id,
+    studentId: updated.studentId?._id,
+    name: updated.studentId?.userId?.name,
+    email: updated.studentId?.userId?.email,
+    admissionNo: updated.studentId?.admissionNo,
+    className: `${updated.studentId?.class}-${updated.studentId?.section}`,
+    routeName: updated.routeName,
+    pickupPoint: updated.pickupPoint,
+    monthlyCharge: updated.monthlyCharge,
+    joiningDate: updated.joiningDate,
+    status: updated.status
+  }
+});
 
   } catch (error) {
 
