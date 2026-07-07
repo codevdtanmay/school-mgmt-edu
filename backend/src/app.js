@@ -1,12 +1,12 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-
+import transportPaymentRoute from "./routes/transportPayment.route.js";
 import authRoute from "./routes/authRoute.js";
 import testRoute from "./routes/testRoute.js";
 import studentRoute from "./routes/studentRoute.js";
 import transportRoutes from "./routes/transport.route.js";
-
+import tcRoute from "./routes/tc.route.js"
 import teacherRoute from "./routes/teacherRoute.route.js";
 import feeStructureRoute from "./routes/feeStructureRoute.route.js";
 import feeRoute from "./routes/feeRoute.route.js";
@@ -48,5 +48,10 @@ app.use("/api/fees", feeRoute);
 
 // Dashboard
 app.use("/api/dashboard", dashboardRoute);
+
+app.use("/api/tc", tcRoute)
+
+// Transport Fee Module
+app.use("/api/transport-fees", transportPaymentRoute);
 
 export default app;

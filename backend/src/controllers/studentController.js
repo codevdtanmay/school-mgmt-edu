@@ -34,7 +34,7 @@ const addStudent = async (req, res) => {
       samagraId,
       apaarId,
       panNo,
-
+      bankDetails,
       usesTransport,
 
       address
@@ -138,7 +138,8 @@ const addStudent = async (req, res) => {
       password: hashedPassword,
       role: "student"
     });
-
+const transportValue =
+  usesTransport === true || usesTransport === "Yes";
     const student = await studentModel.create({
       userId: user._id,
 
@@ -162,8 +163,8 @@ const addStudent = async (req, res) => {
       samagraId,
       apaarId,
       panNo,
-
-      usesTransport,
+      bankDetails,
+      usesTransport: transportValue,
       address,
 
       feeStructureId: feeStructure._id,
@@ -329,7 +330,7 @@ const updatebyId = async (req, res) => {
       samagraId,
       apaarId,
       panNo,
-
+      bankDetails,
       address,
       usesTransport
     } = req.body;
@@ -347,7 +348,8 @@ const updatebyId = async (req, res) => {
 
     await userModel.findByIdAndUpdate(student.userId, {
       name,
-      email
+      email,
+      
     });
 
     let feeStructure = null;
@@ -360,49 +362,49 @@ const updatebyId = async (req, res) => {
 
     }
 
-    await studentModel.findByIdAndUpdate(
-      id,
-      {
+    const updatedStudent = await studentModel.findByIdAndUpdate(
+  id,
+  {
+    class: studentClass,
+    section,
+    rollNo,
 
-        class: studentClass,
-        section,
-        rollNo,
+    fatherName,
+    motherName,
+    phone,
 
-        fatherName,
-        motherName,
-        phone,
+    gender,
+    dateOfBirth,
+    joiningDate,
 
-        gender,
-        dateOfBirth,
-        joiningDate,
+    category,
 
-        category,
+    aadharNo,
+    samagraId,
+    apaarId,
+    panNo,
+    bankDetails,
+    address,
 
-        aadharNo,
-        samagraId,
-        apaarId,
-        panNo,
+    usesTransport:
+      usesTransport === true || usesTransport === "Yes",
 
-        address,
-        usesTransport,
+    ...(feeStructure && {
+      feeStructureId: feeStructure._id,
+      totalFee: feeStructure.totalFee,
+      dueAmount: feeStructure.totalFee
+    })
+  },
+  {
+    new: true
+  }
+);
 
-        ...(feeStructure && {
-          feeStructureId: feeStructure._id,
-          totalFee: feeStructure.totalFee,
-          dueAmount: feeStructure.totalFee
-        })
-
-      },
-      {
-        new: true
-      }
-    );
-
-    return res.status(200).json({
-      success: true,
-      message: "Student Updated Successfully"
-    });
-
+return res.status(200).json({
+  success: true,
+  message: "Student Updated Successfully",
+  student: updatedStudent
+});
   } catch (error) {
 
     console.error(error);

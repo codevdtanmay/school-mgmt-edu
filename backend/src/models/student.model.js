@@ -155,7 +155,30 @@ const studentSchema = new mongoose.Schema(
     deletedAt: {
       type: Date,
       default: null
-    }
+    },
+
+    bankDetails: {
+  accountHolderName: {
+    type: String,
+    default: ""
+  },
+  bankName: {
+    type: String,
+    default: ""
+  },
+  accountNumber: {
+    type: String,
+    default: ""
+  },
+  ifscCode: {
+    type: String,
+    default: ""
+  },
+  branchName: {
+    type: String,
+    default: ""
+  }
+}
   },
   {
     timestamps: true

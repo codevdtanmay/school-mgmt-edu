@@ -118,28 +118,44 @@ const getAllTCs = async (req, res) => {
     }
 
     const formattedTCs = tcs.map(tc => ({
-      id: tc._id,
+  id: tc._id,
 
-      tcNumber: tc.tcNumber,
+  tcNumber: tc.tcNumber,
 
-      studentId: tc.studentId?._id,
+  issueDate: tc.issueDate,
 
-      studentName: tc.studentId?.userId?.name,
+  studentId: tc.studentId?._id,
 
-      admissionNo: tc.studentId?.admissionNo,
+  studentName: tc.studentId?.userId?.name || "",
 
-      classLeaving: tc.classLeaving,
+  admissionNo: tc.studentId?.admissionNo || "",
 
-      issueDate: tc.issueDate,
+  classLeaving: tc.classLeaving || "",
 
-      reason: tc.reason,
+  section: tc.studentId?.section || "",
 
-      conduct: tc.conduct,
+  fatherName: tc.studentId?.fatherName || "",
 
-      promotedTo: tc.promotedTo,
+  motherName: tc.studentId?.motherName || "",
 
-      status: tc.status
-    }));
+  joiningDate: tc.studentId?.joiningDate || "",
+
+  category: tc.studentId?.category || "",
+
+  reason: tc.reason || "",
+
+  conduct: tc.conduct || "",
+
+  lastAttendanceDate: tc.lastAttendanceDate || "",
+
+  promotedTo: tc.promotedTo || "",
+
+  remarks: tc.remarks || "",
+
+  issuedBy: tc.issuedBy || "",
+
+  status: tc.status
+}));
 
     return res.status(200).json({
       success: true,
