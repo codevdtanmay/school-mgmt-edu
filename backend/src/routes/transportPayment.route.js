@@ -44,5 +44,10 @@ router.get(
  
   transportPaymentController.getPendingStudents
 );
+router.get(
+  "/route-report",
+  authMiddleware,
+  transportPaymentController.getRouteReport
+);
 
 export default router;

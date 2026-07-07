@@ -367,7 +367,56 @@ const getPendingStudents = async (req, res) => {
   }
 
 };
+const getRouteReport = async (req, res) => {
+  try {
+    const { month, year } = req.query;
 
+    const transports = await transportModel.find({ status: "Active" });
+
+    const payments = await transportPaymentModel
+      .find({
+        month: Number(month),
+        year: Number(year)
+      })
+      .populate("transportId");
+
+    const routes = [...new Set(transports.map(t => t.routeName))];
+
+    const report = routes.map(route => {
+      const studentsCount = transports.filter(
+        t => t.routeName === route
+      ).length;
+
+      const collection = payments
+        .filter(
+          p => p.transportId?.routeName === route
+        )
+        .reduce(
+          (sum, p) => sum + p.amount,
+          0
+        );
+
+      return {
+        route,
+        studentsCount,
+        collection
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      report
+    });
+
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
+  }
+};
 
 
 export default {
@@ -380,6 +429,8 @@ export default {
 
   getMonthlyReport,
 
-  getPendingStudents
+  getPendingStudents,
+
+  getRouteReport
 
 };
