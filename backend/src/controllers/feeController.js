@@ -370,18 +370,15 @@ const getAllFees = async (req, res) => {
 const getMonthlyFeeReport = async (req, res) => {
   try {
 
-    const { month, year } = req.query;
+    const now = new Date();
 
-    if (!month || !year) {
-      return res.status(400).json({
-        success: false,
-        message: "Month and Year are required"
-      });
-    }
+    const month = Number(req.query.month) || (now.getMonth() + 1);
 
-    const startDate = new Date(Number(year), Number(month) - 1, 1);
+    const year = Number(req.query.year) || now.getFullYear();
 
-    const endDate = new Date(Number(year), Number(month), 1);
+    const startDate = new Date(year, month - 1, 1);
+
+    const endDate = new Date(year, month, 1);
 
     const payments = await feeHistoryModel
       .find({
@@ -406,15 +403,10 @@ const getMonthlyFeeReport = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-
       month,
-
       year,
-
       totalCollection,
-
       totalTransactions: payments.length,
-
       payments
     });
 
@@ -429,6 +421,7 @@ const getMonthlyFeeReport = async (req, res) => {
 
   }
 };
+
 export default {
   collectFee,getStudentFeeDetails,getPaymentHistory,getFeeDashboard,getAllFees,getMonthlyFeeReport
 };
