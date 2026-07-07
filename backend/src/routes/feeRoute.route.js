@@ -26,5 +26,6 @@ router.get(
   authMiddleware,
   feeController.getFeeDashboard
 );
-
+router.get("/", feeController.getAllFees);
+router.get("/monthly-report", feeController.getMonthlyFeeReport);
 export default router;
