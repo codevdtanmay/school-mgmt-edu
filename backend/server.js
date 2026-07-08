@@ -23,9 +23,9 @@ app.get("/api/health", (req, res) => {
 });
 
 // React Router support
-app.use((req, res, next) => {
+app.get("*", (req, res, next) => {
   if (req.path.startsWith("/api")) {
-    return next(); // Let Express continue to API routes / 404
+    return next();
   }
 
   res.sendFile(path.join(__dirname, "dist", "index.html"));

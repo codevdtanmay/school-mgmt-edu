@@ -1,0 +1,64 @@
+{
+  "name": "school-mgmt-edu",
+  "version": "1.0.0",
+  "description": "",
+  "main": "desktop/main.js",
+  "type": "commonjs",
+
+  "scripts": {
+    "desktop": "electron .",
+    "dist": "electron-builder --win"
+  },
+
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codevdtanmay/school-mgmt-edu.git"
+  },
+
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+
+  "bugs": {
+    "url": "https://github.com/codevdtanmay/school-mgmt-edu/issues"
+  },
+
+  "homepage": "https://github.com/codevdtanmay/school-mgmt-edu#readme",
+
+  "devDependencies": {
+    "electron": "^43.0.0",
+    "electron-builder": "^26.15.3"
+  },
+
+  "dependencies": {
+    "tree-kill": "^1.2.2"
+  },
+
+  "build": {
+    "appId": "com.sopf",
+    "productName": "School Management",
+    "asar": true,
+
+    "files": [
+      "desktop/**/*",
+      "backend/**/*",
+      "package.json",
+      "node_modules/**/*"
+    ],
+
+    "directories": {
+      "output": "release"
+    },
+
+    "win": {
+      "target": "nsis"
+    },
+
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}
